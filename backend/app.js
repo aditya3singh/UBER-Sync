@@ -1,20 +1,34 @@
 const dotenv = require('dotenv');
-dotenv.config(); // Environment variables ko load kar rahe hain
+dotenv.config();
 const express = require('express');
-const app = express();
 const cors = require('cors');
+const app = express();
+const cookieParser = require('cookie-parser');
+const connectToDb = require('./db/db');
+const userRoutes = require('./routes/user.routes');
+const captainRoutes = require('./routes/captain.routes');
+const mapsRoutes = require('./routes/maps.routes');
+const rideRoutes = require('./routes/ride.routes');
 
-app.use(cors()); // CORS middleware ko use kar rahe hain
-app.use(express.json()); // JSON body parser middleware ko use kar rahe hain 
+connectToDb();
 
-app.get('/', (req, res) => {
-  res.send('Hello, World!');
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+
+app.get('/', (req, res) => { 
+    res.send('Hello World'); 
 });
 
-module.exports = app; // ye se hum log kar rahe hain ki app ko export kar rahe hain
-// taaki hum isko dusre files mein use kar sakein
-// Ye line server ko start kar rahi hai aur port number ko console par print kar rahi hai
-// Agar PORT environment variable set nahi hai, toh 3000 use hoga
-// Ye code Express framework ka use karke ek simple web server bana raha hai
-// Ye server '/' route par request aane par "Hello, World!" message return karega   
- 
+app.use('/users', userRoutes);
+app.use('/captains', captainRoutes);
+app.use('/maps', mapsRoutes);
+app.use('/rides', rideRoutes);
+
+
+
+
+module.exports = app;
+
