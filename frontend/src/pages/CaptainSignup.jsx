@@ -17,6 +17,7 @@ const CaptainSignup = () => {
   const [ vehiclePlate, setVehiclePlate ] = useState('')
   const [ vehicleCapacity, setVehicleCapacity ] = useState('')
   const [ vehicleType, setVehicleType ] = useState('')
+  const [ error, setError ] = useState('')
 
 
   const { captain, setCaptain } = React.useContext(CaptainDataContext)
@@ -24,6 +25,44 @@ const CaptainSignup = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault()
+    setError('') // Clear previous errors
+    
+    // Client-side validation
+    if (firstName.length < 3) {
+      setError('First name must be at least 3 characters long')
+      return
+    }
+    
+    if (lastName.length < 3) {
+      setError('Last name must be at least 3 characters long')
+      return
+    }
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long')
+      return
+    }
+    
+    if (vehicleColor.length < 3) {
+      setError('Vehicle color must be at least 3 characters long')
+      return
+    }
+    
+    if (vehiclePlate.length < 3) {
+      setError('Vehicle plate must be at least 3 characters long')
+      return
+    }
+    
+    if (!vehicleCapacity || vehicleCapacity < 1) {
+      setError('Vehicle capacity must be at least 1')
+      return
+    }
+    
+    if (!vehicleType) {
+      setError('Please select a vehicle type')
+      return
+    }
+    
     const captainData = {
       fullname: {
         firstname: firstName,
@@ -39,24 +78,31 @@ const CaptainSignup = () => {
       }
     }
 
-    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/captains/register`, captainData)
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/captains/register`, captainData)
 
-    if (response.status === 201) {
-      const data = response.data
-      setCaptain(data.captain)
-      localStorage.setItem('token', data.token)
-      navigate('/captain-home')
+      if (response.status === 201) {
+        const data = response.data
+        setCaptain(data.captain)
+        localStorage.setItem('token', data.token)
+        navigate('/captain-home')
+      }
+    } catch (err) {
+      if (err.response && err.response.data) {
+        if (err.response.data.errors) {
+          // Handle validation errors
+          const validationErrors = err.response.data.errors.map(error => error.msg).join(', ')
+          setError(validationErrors)
+        } else if (err.response.data.message) {
+          // Handle other errors
+          setError(err.response.data.message)
+        } else {
+          setError('Registration failed. Please try again.')
+        }
+      } else {
+        setError('Network error. Please check your connection.')
+      }
     }
-
-    setEmail('')
-    setFirstName('')
-    setLastName('')
-    setPassword('')
-    setVehicleColor('')
-    setVehiclePlate('')
-    setVehicleCapacity('')
-    setVehicleType('')
-
   }
   return (
     <div className='py-5 px-5 h-screen flex flex-col justify-between'>
@@ -66,6 +112,12 @@ const CaptainSignup = () => {
         <form onSubmit={(e) => {
           submitHandler(e)
         }}>
+
+          {error && (
+            <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4'>
+              {error}
+            </div>
+          )}
 
           <h3 className='text-lg w-full  font-medium mb-2'>What's our Captain's name</h3>
           <div className='flex gap-4 mb-7'>
